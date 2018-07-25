@@ -23,6 +23,7 @@ public class AlbumsUpdateScheduler {
 
     public AlbumsUpdateScheduler(DataSource dataSource, AlbumsUpdater albumsUpdater) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+
         this.albumsUpdater = albumsUpdater;
     }
 

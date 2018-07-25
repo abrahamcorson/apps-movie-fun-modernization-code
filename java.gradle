@@ -6,3 +6,11 @@ targetCompatibility = 1.8
 repositories {
     mavenCentral()
 }
+
+ext {
+    springBootVersion = "1.4.2.RELEASE"
+    springVersion = "4.3.4.RELEASE"
+    hibernateVersion = "5.0.11.Final"
+    slf4jVersion = "1.7.21"
+    junitVersion = "4.12"
+}
