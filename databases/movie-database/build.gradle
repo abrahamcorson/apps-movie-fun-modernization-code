@@ -1,0 +1,63 @@
+import org.flywaydb.gradle.FlywayExtension
+import org.flywaydb.gradle.task.FlywayMigrateTask
+
+buildscript {
+    dependencies {
+        classpath "mysql:mysql-connector-java:$mysqlVersion"
+    }
+}
+
+plugins {
+    id "org.flywaydb.flyway" version "4.0.3"
+}
+
+apply from: "../db.gradle"
+
+
+flyway {
+    url = "jdbc:mysql://localhost:3306/movies?useSSL=false"
+    user = "root"
+    outOfOrder = false
+}
+
+def tunnelProcess
+
+task openTunnel {
+    doLast {
+        println 'Opening Tunnel'
+        Thread.start {
+            tunnelProcess = "cf ssh -N -L 63306:${getMysqlHost("movie-service")}:3306 movie-service".execute()
+        }
+
+        sleep 5_000L
+    }
+}
+
+task closeTunnel {
+    doLast {
+        println 'Closing Tunnel'
+        tunnelProcess.destroy()
+    }
+}
+
+task cfMigrate(type: FlywayMigrateTask, dependsOn: openTunnel) {
+    if (System.env.CF_MIGRATE) {
+        extension = setupProdFlywayExtension(new FlywayExtension(), "movie-service")
+    }
+}
+
+cfMigrate.finalizedBy closeTunnel
+
+/*
+task cfMigrate(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
+    extension = new org.flywaydb.gradle.FlywayExtension(
+ //           url: "jdbc:mysql://10.0.8.18:3306/cf_c5672c82_02a5_4034_b40a_ff8120496b62",
+      //      url: "jdbc:mysql://10.0.8.18:3306/cf_c5672c82_02a5_4034_b40a_ff8120496b62?user=RhzPmZ85cSY3OMol\\u0026password=P1aBH2jqArOS9mw8",
+            url: "jdbc:mysql://127.0.0.1:63307/cf_c5672c82_02a5_4034_b40a_ff8120496b62?user=RhzPmZ85cSY3OMol",
+            user: "RhzPmZ85cSY3OMol",
+            password: "P1aBH2jqArOS9mw8",
+            outOfOrder: false
+
+    )
+}
+*/
